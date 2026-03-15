@@ -11,7 +11,7 @@ class TaskService {
     const errors = task.validate();
     if (errors.length > 0) throw new Error(errors.join(', '));
 
-    if (new Date(task.due_date) < new Date()) {
+    // due date must be in future for new tasks\n    if (new Date(task.due_date) < new Date()) {
       throw new Error('Due date cannot be in the past');
     }
 
