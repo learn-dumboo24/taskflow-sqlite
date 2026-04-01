@@ -4,9 +4,9 @@ const TaskRepository = require('../repositories/TaskRepository');
 const config = require('../config/config');
 
 const LEVEL_MESSAGES = {
-  1: 'Reminder: You have an overdue task that needs attention.',
-  2: 'Urgent: This task is significantly overdue. Please address it soon.',
-  3: 'Critical: This task has been overdue for too long. Immediate action required.',
+  1: (title) => `Reminder: "${title}" is overdue. Please complete it soon.`,
+  2: (title) => `Urgent: "${title}" is significantly overdue. Address this immediately.`,
+  3: (title) => `Critical: "${title}" has been overdue for too long. Immediate action required.`,
 };
 
 // FollowUpFactory — centralizes followup creation logic
@@ -17,7 +17,7 @@ class FollowUpFactory {
       user_id: task.user_id,
       level,
       status: 'pending',
-      message: LEVEL_MESSAGES[level],
+      message: LEVEL_MESSAGES[level](task.title),
     };
   }
 }
@@ -55,7 +55,7 @@ class FollowUpService {
       if (targetLevel > followUp.level) {
         this.followUpRepo.update(row.id, {
           level: targetLevel,
-          message: LEVEL_MESSAGES[targetLevel],
+          message: LEVEL_MESSAGES[targetLevel](row.task_title || 'your task'),
         });
       }
     }
