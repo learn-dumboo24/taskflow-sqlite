@@ -1,6 +1,7 @@
 const FollowUp = require('../models/FollowUp');
 const FollowUpRepository = require('../repositories/FollowUpRepository');
 const TaskRepository = require('../repositories/TaskRepository');
+const { daysOverdue: calcDaysOverdue } = require('../utils/dateUtils');
 const config = require('../config/config');
 
 const LEVEL_MESSAGES = {
@@ -42,11 +43,10 @@ class FollowUpService {
 
   escalatePendingFollowUps() {
     const pending = this.followUpRepo.findUnresolvedForEscalation();
-    const now = new Date();
 
     for (const row of pending) {
       const followUp = new FollowUp(row);
-      const daysOverdue = (now - new Date(row.due_date)) / (1000 * 60 * 60 * 24);
+      const daysOverdue = calcDaysOverdue(row.due_date);
 
       let targetLevel = 1;
       if (daysOverdue >= config.followUp.level3AfterDays) targetLevel = 3;
