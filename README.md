@@ -52,3 +52,13 @@ DELETE /api/tasks/:id
 GET    /api/followups
 PATCH  /api/followups/:id/resolve
 ```
+
+## FollowUp Escalation Logic
+
+| Days Overdue | Level | Message Type |
+|---|---|---|
+| 1+ day | Level 1 | Reminder |
+| 3+ days | Level 2 | Urgent |
+| 7+ days | Level 3 | Critical |
+
+Scheduler runs every hour via `node-cron`. Resolving a followup marks the task as completed.
