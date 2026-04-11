@@ -6,7 +6,7 @@ class TaskRepository extends BaseRepository {
   }
 
   findByUserId(userId) {
-    return this.db.prepare('SELECT * FROM tasks WHERE user_id = ? ORDER BY due_date ASC').all(userId);
+    return this.db.prepare('SELECT * FROM tasks WHERE user_id = ? ORDER BY due_date ASC, created_at DESC').all(userId);
   }
 
   findOverdue() {
