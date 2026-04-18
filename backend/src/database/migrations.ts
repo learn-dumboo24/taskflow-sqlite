@@ -1,6 +1,6 @@
-const { getDB } = require('./db');
+import { getDB } from './db';
 
-function runMigrations() {
+export function runMigrations(): void {
   const db = getDB();
 
   db.exec(`
@@ -50,5 +50,3 @@ function runMigrations() {
 
   console.log('Migrations ran successfully');
 }
-
-module.exports = { runMigrations };

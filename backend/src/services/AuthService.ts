@@ -1,33 +1,35 @@
-const jwt = require('jsonwebtoken');
-const User = require('../models/User');
-const UserRepository = require('../repositories/UserRepository');
-const config = require('../config/config');
+import jwt from 'jsonwebtoken';
+import User from '../models/User';
+import UserRepository from '../repositories/UserRepository';
+import { IAuthService } from '../interfaces/IAuthService';
+import { AuthResult, UserData } from '../types';
+import config from '../config/config';
 
-class AuthService {
+class AuthService implements IAuthService {
+  private readonly userRepo: UserRepository;
+
   constructor() {
     this.userRepo = new UserRepository();
   }
 
-  async register(name, email, password) {
+  async register(name: string, email: string, password: string): Promise<AuthResult> {
     const existing = this.userRepo.findByEmail(email);
     if (existing) throw new Error('Email already registered');
 
     const user = new User({ name, email });
     const errors = user.validate();
     if (errors.length > 0) throw new Error(errors.join(', '));
-    if (!password || password.length < 6) throw new Error('Password must be at least 6 characters');
 
     await user.setPassword(password);
 
-    // toPersistenceObject() — only place password_hash is exposed
     const { id, created_at, updated_at, ...persistData } = user.toPersistenceObject();
-    const row = this.userRepo.create({ ...persistData, role: 'user' });
+    const row = this.userRepo.create({ ...persistData, role: 'user' } as Partial<UserData>);
 
-    const token = this._generateToken(row);
+    const token = this.generateToken(new User(row));
     return { user: new User(row).toJSON(), token };
   }
 
-  async login(email, password) {
+  async login(email: string, password: string): Promise<AuthResult> {
     const row = this.userRepo.findByEmail(email);
     if (!row) throw new Error('Invalid email or password');
     if (!row.is_active) throw new Error('Account is deactivated');
@@ -36,11 +38,11 @@ class AuthService {
     const valid = await user.checkPassword(password);
     if (!valid) throw new Error('Invalid email or password');
 
-    const token = this._generateToken(row);
+    const token = this.generateToken(user);
     return { user: user.toJSON(), token };
   }
 
-  _generateToken(user) {
+  private generateToken(user: User): string {
     return jwt.sign(
       { id: user.id, email: user.email, role: user.role },
       config.jwtSecret,
@@ -49,4 +51,4 @@ class AuthService {
   }
 }
 
-module.exports = AuthService;
+export default AuthService;

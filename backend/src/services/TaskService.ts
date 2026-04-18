@@ -1,35 +1,38 @@
-const Task = require('../models/Task');
-const TaskRepository = require('../repositories/TaskRepository');
+import Task from '../models/Task';
+import TaskRepository from '../repositories/TaskRepository';
+import { ITaskService } from '../interfaces/ITaskService';
+import { TaskData, TaskStatus } from '../types';
 
-class TaskService {
+class TaskService implements ITaskService {
+  private readonly taskRepo: TaskRepository;
+
   constructor() {
     this.taskRepo = new TaskRepository();
   }
 
-  createTask(userId, data) {
+  createTask(userId: number, data: Partial<TaskData>): Task {
     const task = new Task({ ...data, user_id: userId });
     const errors = task.validate();
     if (errors.length > 0) throw new Error(errors.join(', '));
 
-    if (new Date(task.due_date) < new Date()) {
+    if (new Date(task.due_date!).getTime() < Date.now()) {
       throw new Error('Due date cannot be in the past');
     }
 
-    // toJSON() exposes only what's needed — encapsulation respected
     const { id, created_at, updated_at, ...fields } = task.toJSON();
-    const row = this.taskRepo.create(fields);
+    const row = this.taskRepo.create(fields as Partial<TaskData>);
     return new Task(row);
   }
 
-  getUserTasks(userId) {
+  getUserTasks(userId: number): Task[] {
     return this.taskRepo.findByUserId(userId).map(r => new Task(r));
   }
 
-  getAllTasks() {
+  getAllTasks(): unknown[] {
     return this.taskRepo.findAllWithUser();
   }
 
-  updateTask(id, userId, data, isAdmin = false) {
+  updateTask(id: number, userId: number, data: Partial<TaskData>, isAdmin = false): Task {
     const row = isAdmin
       ? this.taskRepo.findById(id)
       : this.taskRepo.findByIdAndUser(id, userId);
@@ -38,24 +41,22 @@ class TaskService {
 
     const existing = new Task(row);
 
-    // Use model's transition() for status changes — enforces state machine
+    // Route status changes through the state machine — no raw assignment
     if (data.status && data.status !== existing.status) {
-      existing.transition(data.status);
+      existing.transition(data.status as TaskStatus);
     }
 
-    const allowed = ['title', 'description', 'priority', 'due_date'];
-    const updates = { status: existing.status };
+    const allowed: Array<keyof TaskData> = ['title', 'description', 'priority', 'due_date'];
+    const updates: Partial<TaskData> = { status: existing.status };
     for (const key of allowed) {
-      if (data[key] !== undefined) updates[key] = data[key];
+      if (data[key] !== undefined) (updates as Record<string, unknown>)[key] = data[key];
     }
-
-    if (Object.keys(updates).length === 0) throw new Error('No valid fields to update');
 
     const updated = this.taskRepo.update(id, updates);
     return new Task(updated);
   }
 
-  deleteTask(id, userId, isAdmin = false) {
+  deleteTask(id: number, userId: number, isAdmin = false): boolean {
     const row = isAdmin
       ? this.taskRepo.findById(id)
       : this.taskRepo.findByIdAndUser(id, userId);
@@ -64,9 +65,9 @@ class TaskService {
     return this.taskRepo.delete(id);
   }
 
-  getOverdueTasks() {
+  getOverdueTasks(): Task[] {
     return this.taskRepo.findOverdue().map(r => new Task(r));
   }
 }
 
-module.exports = TaskService;
+export default TaskService;

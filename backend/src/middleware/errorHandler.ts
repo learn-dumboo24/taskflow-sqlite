@@ -1,16 +1,14 @@
-function errorHandler(err, req, res, next) {
+import { Request, Response, NextFunction } from 'express';
+
+function errorHandler(err: Error & { status?: number }, req: Request, res: Response, _next: NextFunction): void {
   console.error(`[ERROR] ${req.method} ${req.path} - ${err.message}`);
 
-  // map known error messages to proper HTTP status codes
-  let status = err.status || 500;
+  let status = err.status ?? 500;
   if (err.message.includes('not found')) status = 404;
   if (err.message.includes('Not authorized') || err.message.includes('Insufficient')) status = 403;
   if (err.message.includes('already registered') || err.message.includes('required') || err.message.includes('Invalid')) status = 400;
 
-  const message = err.message || 'Internal server error';
-
-  // don't leak stack traces in production
-  const response = { error: message };
+  const response: Record<string, unknown> = { error: err.message || 'Internal server error' };
   if (process.env.NODE_ENV === 'development') {
     response.stack = err.stack;
   }
@@ -18,4 +16,4 @@ function errorHandler(err, req, res, next) {
   res.status(status).json(response);
 }
 
-module.exports = errorHandler;
+export default errorHandler;
