@@ -1,16 +1,17 @@
 import { useState, useEffect } from 'react';
-import { followUpsAPI } from '../services/api';
+import { FollowUp, FollowUpLevel } from '../types';
+import { apiService } from '../services/api';
 
-const LEVEL_COLORS = { 1: '#f59e0b', 2: '#f97316', 3: '#ef4444' };
-const LEVEL_LABELS = { 1: 'Reminder', 2: 'Urgent', 3: 'Critical' };
+const LEVEL_COLORS: Record<FollowUpLevel, string> = { 1: '#f59e0b', 2: '#f97316', 3: '#ef4444' };
+const LEVEL_LABELS: Record<FollowUpLevel, string> = { 1: 'Reminder', 2: 'Urgent', 3: 'Critical' };
 
 export default function FollowUps() {
-  const [followUps, setFollowUps] = useState([]);
+  const [followUps, setFollowUps] = useState<FollowUp[]>([]);
   const [loading, setLoading] = useState(true);
 
-  async function loadFollowUps() {
+  async function loadFollowUps(): Promise<void> {
     try {
-      const data = await followUpsAPI.getAll();
+      const data = await apiService.getFollowUps();
       setFollowUps(data);
     } catch (err) {
       console.error(err);
@@ -19,14 +20,14 @@ export default function FollowUps() {
     }
   }
 
-  useEffect(() => { loadFollowUps(); }, []);
+  useEffect(() => { void loadFollowUps(); }, []);
 
-  async function handleResolve(id) {
+  async function handleResolve(id: number): Promise<void> {
     try {
-      await followUpsAPI.resolve(id);
-      loadFollowUps();
+      await apiService.resolveFollowUp(id);
+      void loadFollowUps();
     } catch (err) {
-      alert(err.message);
+      alert((err as Error).message);
     }
   }
 
@@ -54,10 +55,8 @@ export default function FollowUps() {
                     </span>
                   </div>
                   <p style={styles.message}>{f.message}</p>
-                  <div style={styles.meta}>
-                    <span>Due: {new Date(f.due_date).toLocaleDateString()}</span>
-                  </div>
-                  <button onClick={() => handleResolve(f.id)} style={styles.resolveBtn}>
+                  {f.due_date && <p style={styles.meta}>Due: {new Date(f.due_date).toLocaleDateString()}</p>}
+                  <button onClick={() => void handleResolve(f.id)} style={styles.resolveBtn}>
                     Mark Resolved
                   </button>
                 </div>
@@ -81,7 +80,7 @@ export default function FollowUps() {
   );
 }
 
-const styles = {
+const styles: Record<string, React.CSSProperties> = {
   container: { maxWidth: 720, margin: '0 auto', padding: 24 },
   title: { margin: '0 0 20px', color: '#1e293b' },
   section: { color: '#ef4444', marginBottom: 12 },

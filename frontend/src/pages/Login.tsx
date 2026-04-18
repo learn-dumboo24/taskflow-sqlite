@@ -1,20 +1,28 @@
-import { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useState, FormEvent, ChangeEvent } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
+type Mode = 'login' | 'register';
+
+interface FormState {
+  name: string;
+  email: string;
+  password: string;
+}
+
 export default function Login() {
-  const [mode, setMode] = useState('login');
-  const [form, setForm] = useState({ name: '', email: '', password: '' });
-  const [error, setError] = useState('');
+  const [mode, setMode] = useState<Mode>('login');
+  const [form, setForm] = useState<FormState>({ name: '', email: '', password: '' });
+  const [error, setError] = useState<string>('');
   const [loading, setLoading] = useState(false);
   const { login, register } = useAuth();
   const navigate = useNavigate();
 
-  function handleChange(e) {
+  function handleChange(e: ChangeEvent<HTMLInputElement>): void {
     setForm(prev => ({ ...prev, [e.target.name]: e.target.value }));
   }
 
-  async function handleSubmit(e) {
+  async function handleSubmit(e: FormEvent<HTMLFormElement>): Promise<void> {
     e.preventDefault();
     setError('');
     setLoading(true);
@@ -26,10 +34,15 @@ export default function Login() {
       }
       navigate('/');
     } catch (err) {
-      setError(err.message);
+      setError((err as Error).message);
     } finally {
       setLoading(false);
     }
+  }
+
+  function toggleMode(): void {
+    setMode(prev => prev === 'login' ? 'register' : 'login');
+    setError('');
   }
 
   return (
@@ -50,7 +63,7 @@ export default function Login() {
         </form>
         <p style={styles.toggle}>
           {mode === 'login' ? "Don't have an account? " : 'Already have an account? '}
-          <span style={styles.link} onClick={() => setMode(mode === 'login' ? 'register' : 'login')}>
+          <span style={styles.link} onClick={toggleMode}>
             {mode === 'login' ? 'Register' : 'Sign in'}
           </span>
         </p>
@@ -59,7 +72,7 @@ export default function Login() {
   );
 }
 
-const styles = {
+const styles: Record<string, React.CSSProperties> = {
   wrapper: { minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f1f5f9' },
   card: { background: '#fff', padding: 32, borderRadius: 12, width: 360, boxShadow: '0 4px 20px rgba(0,0,0,0.08)' },
   title: { margin: '0 0 4px', color: '#1e293b', textAlign: 'center' },

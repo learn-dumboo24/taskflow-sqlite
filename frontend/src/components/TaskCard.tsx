@@ -1,25 +1,41 @@
-import { tasksAPI } from '../services/api';
+import { ChangeEvent } from 'react';
+import { Task, TaskStatus } from '../types';
+import { apiService } from '../services/api';
 
-const STATUS_COLORS = { pending: '#f59e0b', in_progress: '#3b82f6', completed: '#22c55e' };
-const PRIORITY_COLORS = { low: '#94a3b8', medium: '#f59e0b', high: '#ef4444' };
+interface TaskCardProps {
+  task: Task;
+  onUpdate: () => void;
+}
 
-export default function TaskCard({ task, onUpdate }) {
-  async function handleStatusChange(e) {
+const STATUS_COLORS: Record<TaskStatus, string> = {
+  pending: '#f59e0b',
+  in_progress: '#3b82f6',
+  completed: '#22c55e',
+};
+
+const PRIORITY_COLORS: Record<Task['priority'], string> = {
+  low: '#94a3b8',
+  medium: '#f59e0b',
+  high: '#ef4444',
+};
+
+export default function TaskCard({ task, onUpdate }: TaskCardProps) {
+  async function handleStatusChange(e: ChangeEvent<HTMLSelectElement>): Promise<void> {
     try {
-      await tasksAPI.update(task.id, { status: e.target.value });
+      await apiService.updateTask(task.id, { status: e.target.value as TaskStatus });
       onUpdate();
     } catch (err) {
-      alert(err.message);
+      alert((err as Error).message);
     }
   }
 
-  async function handleDelete() {
+  async function handleDelete(): Promise<void> {
     if (!confirm('Delete this task?')) return;
     try {
-      await tasksAPI.delete(task.id);
+      await apiService.deleteTask(task.id);
       onUpdate();
     } catch (err) {
-      alert(err.message);
+      alert((err as Error).message);
     }
   }
 
@@ -34,8 +50,7 @@ export default function TaskCard({ task, onUpdate }) {
       {task.description && <p style={styles.desc}>{task.description}</p>}
       <div style={styles.meta}>
         <span style={{ color: isOverdue ? '#ef4444' : '#64748b' }}>
-          Due: {new Date(task.due_date).toLocaleString()}
-          {isOverdue && ' ⚠️ OVERDUE'}
+          Due: {new Date(task.due_date).toLocaleString()}{isOverdue && ' ⚠️ OVERDUE'}
         </span>
         <span style={{ color: PRIORITY_COLORS[task.priority] }}>{task.priority}</span>
       </div>
@@ -51,7 +66,7 @@ export default function TaskCard({ task, onUpdate }) {
   );
 }
 
-const styles = {
+const styles: Record<string, React.CSSProperties> = {
   card: { background: '#fff', border: '1px solid #e2e8f0', borderRadius: 8, padding: 16, marginBottom: 12 },
   top: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 },
   title: { fontWeight: 600, color: '#1e293b' },

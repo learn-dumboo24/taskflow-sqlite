@@ -5,7 +5,7 @@ export default function Navbar() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
 
-  function handleLogout() {
+  function handleLogout(): void {
     logout();
     navigate('/login');
   }
@@ -23,7 +23,7 @@ export default function Navbar() {
   );
 }
 
-const styles = {
+const styles: Record<string, React.CSSProperties> = {
   nav: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 24px', background: '#1a2332', color: '#fff' },
   brand: { color: '#4ade80', textDecoration: 'none', fontWeight: 'bold', fontSize: 18 },
   links: { display: 'flex', alignItems: 'center', gap: 16 },
