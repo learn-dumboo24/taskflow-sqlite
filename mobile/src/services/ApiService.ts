@@ -1,3 +1,4 @@
+import { storageService } from './StorageService';
 import {
   AuthResult,
   Task,
@@ -6,24 +7,23 @@ import {
   UpdateTaskPayload,
 } from '../types';
 
-// ApiService class — encapsulates all HTTP logic, single responsibility
-class ApiService {
-  private readonly baseUrl = '/api';
+// Change to your machine's local IP when testing on a physical device
+// Android emulator → 10.0.2.2, iOS simulator → localhost
+const BASE_URL = 'http://localhost:3000/api';
 
-  private getHeaders(): Record<string, string> {
-    const token = localStorage.getItem('token');
+class ApiService {
+  private async getHeaders(): Promise<Record<string, string>> {
+    const token = await storageService.get('token');
     const headers: Record<string, string> = { 'Content-Type': 'application/json' };
     if (token) headers['Authorization'] = `Bearer ${token}`;
     return headers;
   }
 
   private async request<T>(path: string, options: RequestInit = {}): Promise<T> {
-    const res = await fetch(`${this.baseUrl}${path}`, {
-      ...options,
-      headers: this.getHeaders(),
-    });
-    const data = await res.json() as T & { error?: string };
-    if (!res.ok) throw new Error((data as { error?: string }).error ?? 'Request failed');
+    const headers = await this.getHeaders();
+    const res = await fetch(`${BASE_URL}${path}`, { ...options, headers });
+    const data = (await res.json()) as T & { error?: string };
+    if (!res.ok) throw new Error(data.error ?? 'Request failed');
     return data;
   }
 
@@ -69,5 +69,4 @@ class ApiService {
   }
 }
 
-// Singleton — one instance shared across the app
 export const apiService = new ApiService();

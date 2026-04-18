@@ -24,9 +24,6 @@ export interface Task {
   due_date: string;
   created_at: string;
   updated_at: string;
-  // joined fields (admin view)
-  user_name?: string;
-  user_email?: string;
 }
 
 export interface FollowUp {
@@ -38,11 +35,8 @@ export interface FollowUp {
   message: string;
   resolved_at: string | null;
   created_at: string;
-  updated_at: string;
-  // joined fields
   task_title?: string;
   due_date?: string;
-  user_name?: string;
 }
 
 export interface AuthResult {
@@ -64,3 +58,14 @@ export interface UpdateTaskPayload {
   priority?: TaskPriority;
   due_date?: string;
 }
+
+// Navigation param types
+export type RootStackParamList = {
+  Login: undefined;
+  Main: undefined;
+};
+
+export type MainTabParamList = {
+  Dashboard: undefined;
+  FollowUps: undefined;
+};
