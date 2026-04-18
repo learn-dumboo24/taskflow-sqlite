@@ -19,12 +19,9 @@ class AuthService {
 
     await user.setPassword(password);
 
-    const row = this.userRepo.create({
-      name: user.name,
-      email: user.email,
-      password_hash: user.password_hash,
-      role: 'user',
-    });
+    // toPersistenceObject() — only place password_hash is exposed
+    const { id, created_at, updated_at, ...persistData } = user.toPersistenceObject();
+    const row = this.userRepo.create({ ...persistData, role: 'user' });
 
     const token = this._generateToken(row);
     return { user: new User(row).toJSON(), token };

@@ -11,19 +11,13 @@ class TaskService {
     const errors = task.validate();
     if (errors.length > 0) throw new Error(errors.join(', '));
 
-    // due date must be in future for new tasks\n    if (new Date(task.due_date) < new Date()) {
+    if (new Date(task.due_date) < new Date()) {
       throw new Error('Due date cannot be in the past');
     }
 
-    const row = this.taskRepo.create({
-      user_id: task.user_id,
-      title: task.title.trim(),
-      description: task.description,
-      status: task.status,
-      priority: task.priority,
-      due_date: task.due_date,
-    });
-
+    // toJSON() exposes only what's needed — encapsulation respected
+    const { id, created_at, updated_at, ...fields } = task.toJSON();
+    const row = this.taskRepo.create(fields);
     return new Task(row);
   }
 
@@ -42,8 +36,15 @@ class TaskService {
 
     if (!row) throw new Error('Task not found');
 
-    const allowed = ['title', 'description', 'status', 'priority', 'due_date'];
-    const updates = {};
+    const existing = new Task(row);
+
+    // Use model's transition() for status changes — enforces state machine
+    if (data.status && data.status !== existing.status) {
+      existing.transition(data.status);
+    }
+
+    const allowed = ['title', 'description', 'priority', 'due_date'];
+    const updates = { status: existing.status };
     for (const key of allowed) {
       if (data[key] !== undefined) updates[key] = data[key];
     }
