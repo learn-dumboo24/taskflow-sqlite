@@ -8,6 +8,7 @@ export interface BaseModelData {
   id?: number | null;
   created_at?: string | null;
   updated_at?: string | null;
+  [key: string]: unknown;
 }
 
 export interface UserData extends BaseModelData {
@@ -48,4 +49,17 @@ export interface JwtPayload {
 export interface AuthResult {
   user: Record<string, unknown>;
   token: string;
+}
+
+export interface CategoryData extends BaseModelData {
+  user_id?: number | null;
+  name?: string;
+  color?: string;
+}
+
+export interface CommentData extends BaseModelData {
+  task_id?: number | null;
+  user_id?: number | null;
+  content?: string;
+  user_name?: string;
 }

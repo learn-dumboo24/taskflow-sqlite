@@ -46,7 +46,8 @@ class AuthService implements IAuthService {
     return jwt.sign(
       { id: user.id, email: user.email, role: user.role },
       config.jwtSecret,
-      { expiresIn: config.jwtExpiresIn }
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      { expiresIn: config.jwtExpiresIn as any }
     );
   }
 }

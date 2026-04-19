@@ -46,6 +46,38 @@ export function runMigrations(): void {
     CREATE INDEX IF NOT EXISTS idx_tasks_due_date ON tasks(due_date);
     CREATE INDEX IF NOT EXISTS idx_followups_task_id ON followups(task_id);
     CREATE INDEX IF NOT EXISTS idx_followups_user_id ON followups(user_id);
+
+    CREATE TABLE IF NOT EXISTS categories (
+      id         INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id    INTEGER NOT NULL,
+      name       TEXT NOT NULL,
+      color      TEXT NOT NULL DEFAULT '#3b82f6',
+      created_at TEXT NOT NULL DEFAULT (datetime('now')),
+      updated_at TEXT NOT NULL DEFAULT (datetime('now')),
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    );
+
+    CREATE TABLE IF NOT EXISTS task_categories (
+      task_id     INTEGER NOT NULL,
+      category_id INTEGER NOT NULL,
+      PRIMARY KEY (task_id, category_id),
+      FOREIGN KEY (task_id) REFERENCES tasks(id) ON DELETE CASCADE,
+      FOREIGN KEY (category_id) REFERENCES categories(id) ON DELETE CASCADE
+    );
+
+    CREATE TABLE IF NOT EXISTS comments (
+      id         INTEGER PRIMARY KEY AUTOINCREMENT,
+      task_id    INTEGER NOT NULL,
+      user_id    INTEGER NOT NULL,
+      content    TEXT NOT NULL,
+      created_at TEXT NOT NULL DEFAULT (datetime('now')),
+      updated_at TEXT NOT NULL DEFAULT (datetime('now')),
+      FOREIGN KEY (task_id) REFERENCES tasks(id) ON DELETE CASCADE,
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_categories_user_id ON categories(user_id);
+    CREATE INDEX IF NOT EXISTS idx_comments_task_id ON comments(task_id);
   `);
 
   console.log('Migrations ran successfully');

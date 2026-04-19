@@ -3,32 +3,10 @@ import Task from '../models/Task';
 import FollowUpRepository from '../repositories/FollowUpRepository';
 import TaskRepository from '../repositories/TaskRepository';
 import { IFollowUpService } from '../interfaces/IFollowUpService';
-import { FollowUpData, FollowUpLevel } from '../types';
+import { FollowUpLevel } from '../types';
 import { daysOverdue } from '../utils/dateUtils';
 import config from '../config/config';
-
-// Factory pattern — centralises followup creation logic
-class FollowUpFactory {
-  private static readonly MESSAGES: Record<FollowUpLevel, (title: string) => string> = {
-    1: (t) => `Reminder: "${t}" is overdue. Please complete it soon.`,
-    2: (t) => `Urgent: "${t}" is significantly overdue. Address this immediately.`,
-    3: (t) => `Critical: "${t}" has been overdue for too long. Immediate action required.`,
-  };
-
-  static create(task: Task, level: FollowUpLevel): Partial<FollowUpData> {
-    return {
-      task_id: task.id!,
-      user_id: task.user_id!,
-      level,
-      status: 'pending',
-      message: this.MESSAGES[level](task.title),
-    };
-  }
-
-  static getMessage(level: FollowUpLevel, taskTitle: string): string {
-    return this.MESSAGES[level](taskTitle);
-  }
-}
+import FollowUpFactory from '../factories/FollowUpFactory';
 
 class FollowUpService implements IFollowUpService {
   private readonly followUpRepo: FollowUpRepository;
