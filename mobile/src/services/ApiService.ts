@@ -7,9 +7,7 @@ import {
   UpdateTaskPayload,
 } from '../types';
 
-// Change to your machine's local IP when testing on a physical device
-// Android emulator → 10.0.2.2, iOS simulator → localhost
-const BASE_URL = 'http://localhost:3000/api';
+const BASE_URL = process.env.EXPO_PUBLIC_API_URL ?? 'http://localhost:3000/api';
 
 class ApiService {
   private async getHeaders(): Promise<Record<string, string>> {
